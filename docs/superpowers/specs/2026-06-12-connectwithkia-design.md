@@ -1,7 +1,7 @@
 # ConnectWithKia — Design
 
 **Date:** 2026-06-12
-**Status:** Draft (pending review)
+**Status:** Implemented
 **Owner:** y3knik (Nikhil Bhatia)
 **Repo:** https://github.com/y3knik/ConnectWithKia (rename from `ConnectiwthKia` typo)
 
