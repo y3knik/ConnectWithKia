@@ -1,0 +1,21 @@
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      kotlin-and-compose:
+        patterns:
+          - "org.jetbrains.kotlin*"
+          - "androidx.compose*"
+      androidx:
+        patterns:
+          - "androidx.*"
+      networking:
+        patterns:
+          - "com.squareup.*"
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly

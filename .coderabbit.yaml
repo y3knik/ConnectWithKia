@@ -1,0 +1,18 @@
+language: en
+reviews:
+  profile: chill
+  auto_review:
+    enabled: true
+    drafts: false
+  poem: false
+  request_changes_workflow: false
+  high_level_summary: true
+  review_status: true
+  path_filters:
+    - "!**/build/**"
+    - "!**/generated/**"
+    - "!gradle/wrapper/**"
+    - "!**/*.png"
+    - "!**/*.jpg"
+chat:
+  auto_reply: true
