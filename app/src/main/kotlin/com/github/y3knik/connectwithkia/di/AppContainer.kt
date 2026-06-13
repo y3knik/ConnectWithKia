@@ -12,6 +12,7 @@ import com.github.y3knik.connectwithkia.kia.DefaultKiaClient
 import com.github.y3knik.connectwithkia.kia.KiaClient
 import com.github.y3knik.connectwithkia.scheduler.AndroidAlarmDriver
 import com.github.y3knik.connectwithkia.scheduler.LockScheduler
+import com.github.y3knik.connectwithkia.service.SchedulerServiceController
 
 class AppContainer private constructor(context: Context) {
     val prefs = SecurePreferences(context.applicationContext)
@@ -43,6 +44,10 @@ class AppContainer private constructor(context: Context) {
             override fun write(value: Long?) { settings.pendingLockTargetMs = value }
         },
     )
+
+    private val serviceController = SchedulerServiceController(context.applicationContext, scheduler)
+
+    init { serviceController.start() }
 
     companion object {
         @Volatile private var instance: AppContainer? = null

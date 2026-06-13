@@ -50,7 +50,14 @@
             android:name=".scheduler.CancelLockReceiver"
             android:exported="false" />
 
-        <!-- Foreground service + receivers wired in later tasks -->
+        <service
+            android:name=".service.LockForegroundService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Walk-away lock for personal Kia Connect vehicle" />
+        </service>
 
     </application>
 </manifest>
