@@ -39,8 +39,13 @@ class DefaultKiaClient internal constructor(
         )
     }
 
-    override suspend fun vehicles(): Result<List<Vehicle>> =
-        Result.failure(NotImplementedError("vehicles() implemented in Task 8"))
+    override suspend fun vehicles(): Result<List<Vehicle>> = runCatching {
+        val token = requireNotNull(tokenStorage.readAccessToken()) { "not logged in" }
+        val response = api.vehicles(token)
+        val body = response.body()
+        require(response.isSuccessful && body != null) { "vehicles failed: HTTP ${response.code()}" }
+        body.vehicles.map { Vehicle(id = it.vehicleId, nickname = it.nickName, vin = it.vin) }
+    }
 
     override suspend fun lock(vehicleId: String, pin: String): Result<Unit> =
         Result.failure(NotImplementedError("lock() implemented in Task 9"))

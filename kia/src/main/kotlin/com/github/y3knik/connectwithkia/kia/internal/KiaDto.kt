@@ -14,3 +14,15 @@ internal data class LoginResponse(
     val accessToken: String,
     val expiresIn: Long,
 )
+
+@Serializable
+internal data class VehiclesResponse(
+    val vehicles: List<VehicleDto>,
+)
+
+@Serializable
+internal data class VehicleDto(
+    @SerialName("vehicleId") val vehicleId: String,
+    @SerialName("nickName") val nickName: String,
+    val vin: String,
+)
