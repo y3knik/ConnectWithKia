@@ -27,6 +27,18 @@ android {
         buildConfig = true
     }
 
+    signingConfigs {
+        create("release") {
+            val keystore = file("release.keystore")
+            if (keystore.exists()) {
+                storeFile = keystore
+                keyAlias = System.getenv("SIGNING_KEY_ALIAS") ?: "release"
+                keyPassword = System.getenv("SIGNING_KEY_PASSWORD") ?: ""
+                storePassword = System.getenv("SIGNING_STORE_PASSWORD") ?: ""
+            }
+        }
+    }
+
     buildTypes {
         debug {
             isDebuggable = true

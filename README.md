@@ -24,6 +24,25 @@ Requires JDK 17 and the Android SDK.
 
 Output APK: `app/build/outputs/apk/debug/app-debug.apk`.
 
+## Signed releases
+
+The `release` workflow signs the APK using these repository secrets (Settings → Secrets and variables → Actions):
+
+- `SIGNING_KEYSTORE_BASE64` — `base64` of an Android signing keystore
+- `SIGNING_KEY_ALIAS`
+- `SIGNING_KEY_PASSWORD`
+- `SIGNING_STORE_PASSWORD`
+
+Create the keystore once locally:
+
+```bash
+keytool -genkey -v -keystore release.keystore -alias release \
+  -keyalg RSA -keysize 2048 -validity 10000
+base64 -w 0 release.keystore > release.keystore.b64
+```
+
+Copy the contents of `release.keystore.b64` into the `SIGNING_KEYSTORE_BASE64` secret. Tag a release with `git tag v0.1.0 && git push --tags` to trigger the build.
+
 ## License
 
 MIT — see [`LICENSE`](LICENSE).
