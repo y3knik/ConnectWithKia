@@ -11,3 +11,9 @@ data class Vehicle(
     val nickname: String,
     val vin: String,
 )
+
+data class Credentials(val email: String, val password: String)
+
+fun interface CredentialProvider {
+    fun current(): Credentials?
+}

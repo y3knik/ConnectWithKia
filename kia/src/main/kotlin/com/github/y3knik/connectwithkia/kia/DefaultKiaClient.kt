@@ -2,7 +2,6 @@ package com.github.y3knik.connectwithkia.kia
 
 import com.github.y3knik.connectwithkia.kia.internal.KiaApi
 import com.github.y3knik.connectwithkia.kia.internal.LoginRequest
-import com.github.y3knik.connectwithkia.kia.internal.PinRequest
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -13,6 +12,7 @@ import java.util.concurrent.TimeUnit
 class DefaultKiaClient internal constructor(
     baseUrl: String,
     private val tokenStorage: TokenStorage,
+    private val credentialProvider: CredentialProvider = CredentialProvider { null },
     private val clockMs: () -> Long = { System.currentTimeMillis() },
     okHttpClient: OkHttpClient = defaultOkHttp(),
 ) : KiaClient {
@@ -25,9 +25,10 @@ class DefaultKiaClient internal constructor(
         .build()
         .create(KiaApi::class.java)
 
-    constructor(tokenStorage: TokenStorage) : this(
+    constructor(tokenStorage: TokenStorage, credentialProvider: CredentialProvider) : this(
         baseUrl = "https://kiaconnect.ca/",
         tokenStorage = tokenStorage,
+        credentialProvider = credentialProvider,
     )
 
     override suspend fun login(email: String, password: String): Result<Unit> = runCatching {
@@ -49,10 +50,21 @@ class DefaultKiaClient internal constructor(
     }
 
     override suspend fun lock(vehicleId: String, pin: String): Result<Unit> = runCatching {
-        val token = requireNotNull(tokenStorage.readAccessToken()) { "not logged in" }
-        val pinResponse = api.verifyPin(token, PinRequest(pin))
+        suspend fun attempt(): retrofit2.Response<com.github.y3knik.connectwithkia.kia.internal.PinResponse> {
+            val token = requireNotNull(tokenStorage.readAccessToken()) { "not logged in" }
+            return api.verifyPin(token, com.github.y3knik.connectwithkia.kia.internal.PinRequest(pin))
+        }
+
+        var pinResponse = attempt()
+        if (pinResponse.code() == 401) {
+            val creds = credentialProvider.current() ?: error("401 from preauth and no credentials available to refresh")
+            login(creds.email, creds.password).getOrThrow()
+            pinResponse = attempt()
+        }
         val pAuth = pinResponse.body()?.pAuth
         require(pinResponse.isSuccessful && pAuth != null) { "pin verify failed: HTTP ${pinResponse.code()}" }
+
+        val token = requireNotNull(tokenStorage.readAccessToken())
         val lockResponse = api.lock(token, pAuth, vehicleId)
         require(lockResponse.isSuccessful) { "lock failed: HTTP ${lockResponse.code()}" }
     }
