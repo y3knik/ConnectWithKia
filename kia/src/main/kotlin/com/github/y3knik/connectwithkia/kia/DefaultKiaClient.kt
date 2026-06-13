@@ -14,7 +14,8 @@ class DefaultKiaClient internal constructor(
     private val tokenStorage: TokenStorage,
     private val credentialProvider: CredentialProvider = CredentialProvider { null },
     private val clockMs: () -> Long = { System.currentTimeMillis() },
-    okHttpClient: OkHttpClient = defaultOkHttp(),
+    enableLogging: Boolean = false,
+    okHttpClient: OkHttpClient = buildDefaultOkHttpClient(enableLogging),
 ) : KiaClient {
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -29,6 +30,13 @@ class DefaultKiaClient internal constructor(
         baseUrl = "https://kiaconnect.ca/",
         tokenStorage = tokenStorage,
         credentialProvider = credentialProvider,
+    )
+
+    constructor(tokenStorage: TokenStorage, credentialProvider: CredentialProvider, enableLogging: Boolean) : this(
+        baseUrl = "https://kiaconnect.ca/",
+        tokenStorage = tokenStorage,
+        credentialProvider = credentialProvider,
+        enableLogging = enableLogging,
     )
 
     override suspend fun login(email: String, password: String): Result<Unit> = runCatching {
@@ -70,11 +78,19 @@ class DefaultKiaClient internal constructor(
     }
 
     companion object {
-        private fun defaultOkHttp(): OkHttpClient =
-            OkHttpClient.Builder()
+        private fun buildDefaultOkHttpClient(enableLogging: Boolean): OkHttpClient {
+            val builder = OkHttpClient.Builder()
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)
                 .writeTimeout(15, TimeUnit.SECONDS)
-                .build()
+            if (enableLogging) {
+                builder.addInterceptor(com.github.y3knik.connectwithkia.kia.internal.RedactingInterceptor())
+                builder.addInterceptor(
+                    okhttp3.logging.HttpLoggingInterceptor()
+                        .setLevel(okhttp3.logging.HttpLoggingInterceptor.Level.BODY),
+                )
+            }
+            return builder.build()
+        }
     }
 }
