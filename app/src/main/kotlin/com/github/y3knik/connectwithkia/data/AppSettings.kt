@@ -18,11 +18,19 @@ class AppSettings(private val prefs: PreferencesSource) {
         get() = prefs.getString(KEY_DELAY_MIN)?.toIntOrNull() ?: DEFAULT_DELAY_MIN
         set(value) { prefs.putString(KEY_DELAY_MIN, value.coerceIn(MIN_DELAY_MIN, MAX_DELAY_MIN).toString()) }
 
+    var pendingLockTargetMs: Long?
+        get() = prefs.getString(KEY_PENDING_TARGET)?.toLongOrNull()
+        set(value) {
+            if (value == null) prefs.remove(KEY_PENDING_TARGET)
+            else prefs.putString(KEY_PENDING_TARGET, value.toString())
+        }
+
     private companion object {
         const val KEY_ENABLED = "settings_enabled"
         const val KEY_HIGH_PROMINENCE = "settings_high_prominence"
         const val KEY_SUCCESS_NOTIF = "settings_success_notif"
         const val KEY_DELAY_MIN = "settings_delay_min"
+        const val KEY_PENDING_TARGET = "pending_lock_target_ms"
         const val DEFAULT_DELAY_MIN = 5
         const val MIN_DELAY_MIN = 1
         const val MAX_DELAY_MIN = 15

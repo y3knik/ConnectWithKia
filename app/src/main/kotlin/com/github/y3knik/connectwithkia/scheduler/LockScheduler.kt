@@ -18,7 +18,16 @@ class LockScheduler(
     private val credentials: () -> Triple<String, String, Boolean>?,
     private val clockMs: () -> Long = { System.currentTimeMillis() },
     private val scope: CoroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.IO),
+    private val persistedTarget: PersistedTarget = NoopPersistedTarget,
 ) {
+    interface PersistedTarget {
+        fun read(): Long?
+        fun write(value: Long?)
+    }
+    private object NoopPersistedTarget : PersistedTarget {
+        override fun read(): Long? = null
+        override fun write(value: Long?) {}
+    }
     private val _state = MutableStateFlow<LockState>(
         if (credentials() != null) LockState.Idle else LockState.Disabled(configured = false),
     )
@@ -42,12 +51,37 @@ class LockScheduler(
         if (next is LockState.PendingLock && previous !is LockState.PendingLock) {
             val targetMs = clockMs() + delayMinutes().coerceAtLeast(1) * 60_000L
             alarmDriver.arm(targetMs)
+            persistedTarget.write(targetMs)
         }
         if (previous is LockState.PendingLock && next !is LockState.PendingLock && event != LockEvent.AlarmFired) {
             alarmDriver.cancel()
+            persistedTarget.write(null)
         }
         if (next is LockState.Locking) {
+            persistedTarget.write(null)
             performLock()
+        }
+    }
+
+    /** Called by BootReceiver. Returns true if an alarm was re-armed. */
+    fun rearmIfPending(): Boolean {
+        val target = persistedTarget.read() ?: return false
+        val now = clockMs()
+        return when {
+            target > now -> {
+                alarmDriver.arm(target)
+                _state.value = LockState.PendingLock
+                true
+            }
+            now - target <= STALE_LIMIT_MS -> {
+                _state.value = LockState.PendingLock
+                onEvent(LockEvent.AlarmFired)
+                true
+            }
+            else -> {
+                persistedTarget.write(null)
+                false
+            }
         }
     }
 
@@ -64,5 +98,9 @@ class LockScheduler(
                 onFailure = { onEvent(LockEvent.LockFailed(it.message ?: "unknown")) },
             )
         }
+    }
+
+    private companion object {
+        const val STALE_LIMIT_MS = 30L * 60_000L
     }
 }

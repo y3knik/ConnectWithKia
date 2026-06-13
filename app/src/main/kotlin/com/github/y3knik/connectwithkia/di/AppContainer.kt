@@ -38,6 +38,10 @@ class AppContainer private constructor(context: Context) {
             val vid = credentials.vehicleId ?: return@LockScheduler null
             Triple(vid, c.pin, settings.enabled)
         },
+        persistedTarget = object : LockScheduler.PersistedTarget {
+            override fun read(): Long? = settings.pendingLockTargetMs
+            override fun write(value: Long?) { settings.pendingLockTargetMs = value }
+        },
     )
 
     companion object {
