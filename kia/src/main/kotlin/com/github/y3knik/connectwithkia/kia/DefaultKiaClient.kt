@@ -64,7 +64,7 @@ class DefaultKiaClient internal constructor(
         val pAuth = pinResponse.body()?.pAuth
         require(pinResponse.isSuccessful && pAuth != null) { "pin verify failed: HTTP ${pinResponse.code()}" }
 
-        val token = requireNotNull(tokenStorage.readAccessToken())
+        val token = requireNotNull(tokenStorage.readAccessToken()) { "not logged in" }
         val lockResponse = api.lock(token, pAuth, vehicleId)
         require(lockResponse.isSuccessful) { "lock failed: HTTP ${lockResponse.code()}" }
     }
