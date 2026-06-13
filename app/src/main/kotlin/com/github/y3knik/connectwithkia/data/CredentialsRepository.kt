@@ -5,7 +5,6 @@ data class StoredCredentials(val email: String, val password: String, val pin: S
 }
 
 class CredentialsRepository(private val prefs: PreferencesSource) {
-
     val hasCompleteCredentials: Boolean
         get() = read() != null
 
@@ -16,7 +15,11 @@ class CredentialsRepository(private val prefs: PreferencesSource) {
         return StoredCredentials(email, password, pin)
     }
 
-    fun write(email: String, password: String, pin: String) {
+    fun write(
+        email: String,
+        password: String,
+        pin: String,
+    ) {
         prefs.putString(KEY_EMAIL, email)
         prefs.putString(KEY_PASSWORD, password)
         prefs.putString(KEY_PIN, pin)
@@ -25,8 +28,11 @@ class CredentialsRepository(private val prefs: PreferencesSource) {
     var vehicleId: String?
         get() = prefs.getString(KEY_VEHICLE_ID)
         set(value) {
-            if (value == null) prefs.remove(KEY_VEHICLE_ID)
-            else prefs.putString(KEY_VEHICLE_ID, value)
+            if (value == null) {
+                prefs.remove(KEY_VEHICLE_ID)
+            } else {
+                prefs.putString(KEY_VEHICLE_ID, value)
+            }
         }
 
     fun clear() {

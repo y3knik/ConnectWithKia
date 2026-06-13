@@ -1,28 +1,38 @@
 package com.github.y3knik.connectwithkia.data
 
 class AppSettings(private val prefs: PreferencesSource) {
-
     var enabled: Boolean
         get() = prefs.getString(KEY_ENABLED)?.toBoolean() ?: true
-        set(value) { prefs.putString(KEY_ENABLED, value.toString()) }
+        set(value) {
+            prefs.putString(KEY_ENABLED, value.toString())
+        }
 
     var highProminenceCountdown: Boolean
         get() = prefs.getString(KEY_HIGH_PROMINENCE)?.toBoolean() ?: true
-        set(value) { prefs.putString(KEY_HIGH_PROMINENCE, value.toString()) }
+        set(value) {
+            prefs.putString(KEY_HIGH_PROMINENCE, value.toString())
+        }
 
     var successNotification: Boolean
         get() = prefs.getString(KEY_SUCCESS_NOTIF)?.toBoolean() ?: true
-        set(value) { prefs.putString(KEY_SUCCESS_NOTIF, value.toString()) }
+        set(value) {
+            prefs.putString(KEY_SUCCESS_NOTIF, value.toString())
+        }
 
     var lockDelayMinutes: Int
         get() = prefs.getString(KEY_DELAY_MIN)?.toIntOrNull() ?: DEFAULT_DELAY_MIN
-        set(value) { prefs.putString(KEY_DELAY_MIN, value.coerceIn(MIN_DELAY_MIN, MAX_DELAY_MIN).toString()) }
+        set(value) {
+            prefs.putString(KEY_DELAY_MIN, value.coerceIn(MIN_DELAY_MIN, MAX_DELAY_MIN).toString())
+        }
 
     var pendingLockTargetMs: Long?
         get() = prefs.getString(KEY_PENDING_TARGET)?.toLongOrNull()
         set(value) {
-            if (value == null) prefs.remove(KEY_PENDING_TARGET)
-            else prefs.putString(KEY_PENDING_TARGET, value.toString())
+            if (value == null) {
+                prefs.remove(KEY_PENDING_TARGET)
+            } else {
+                prefs.putString(KEY_PENDING_TARGET, value.toString())
+            }
         }
 
     private companion object {

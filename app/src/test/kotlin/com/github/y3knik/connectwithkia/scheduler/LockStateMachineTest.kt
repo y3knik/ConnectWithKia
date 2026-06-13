@@ -4,7 +4,6 @@ import org.junit.Test
 import kotlin.test.assertEquals
 
 class LockStateMachineTest {
-
     @Test
     fun `disabled stays disabled on any event when not configured`() {
         val sm = LockStateMachine(initial = LockState.Disabled(configured = false))

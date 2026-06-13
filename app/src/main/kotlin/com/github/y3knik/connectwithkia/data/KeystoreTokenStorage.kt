@@ -8,7 +8,10 @@ class KeystoreTokenStorage(private val prefs: PreferencesSource) : TokenStorage 
 
     override fun readAccessToken(): String? = prefs.getString(keyToken)
 
-    override fun writeAccessToken(token: String, expiresAtEpochMs: Long) {
+    override fun writeAccessToken(
+        token: String,
+        expiresAtEpochMs: Long,
+    ) {
         prefs.putString(keyToken, token)
         prefs.putString(keyExpires, expiresAtEpochMs.toString())
     }

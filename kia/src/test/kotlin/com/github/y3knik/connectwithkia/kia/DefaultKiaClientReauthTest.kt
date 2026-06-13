@@ -17,33 +17,38 @@ class DefaultKiaClientReauthTest {
     @Before
     fun setUp() {
         server = MockWebServer().also { it.start() }
-        storage = InMemoryTokenStorage().also {
-            it.writeAccessToken("EXPIRED", 9_999_999_999L)
-        }
-        client = DefaultKiaClient(
-            baseUrl = server.url("/").toString(),
-            tokenStorage = storage,
-            credentialProvider = { Credentials("user@example.com", "pw") },
-        )
+        storage =
+            InMemoryTokenStorage().also {
+                it.writeAccessToken("EXPIRED", 9_999_999_999L)
+            }
+        client =
+            DefaultKiaClient(
+                baseUrl = server.url("/").toString(),
+                tokenStorage = storage,
+                credentialProvider = { Credentials("user@example.com", "pw") },
+            )
     }
 
-    @After fun tearDown() { server.shutdown() }
+    @After fun tearDown() {
+        server.shutdown()
+    }
 
     @Test
-    fun `lock re-logs in on 401 then retries`() = runTest {
-        // 1. verifyPin → 401
-        server.enqueue(MockResponse().setResponseCode(401))
-        // 2. login → 200 with fresh token
-        server.enqueue(MockResponse().setResponseCode(200).setBody(fixture("fixtures/login_success.json")))
-        // 3. verifyPin retry → 200
-        server.enqueue(MockResponse().setResponseCode(200).setBody(fixture("fixtures/vrfypin_success.json")))
-        // 4. drlck → 200
-        server.enqueue(MockResponse().setResponseCode(200).setBody(fixture("fixtures/drlck_success.json")))
+    fun `lock re-logs in on 401 then retries`() =
+        runTest {
+            // 1. verifyPin → 401
+            server.enqueue(MockResponse().setResponseCode(401))
+            // 2. login → 200 with fresh token
+            server.enqueue(MockResponse().setResponseCode(200).setBody(fixture("fixtures/login_success.json")))
+            // 3. verifyPin retry → 200
+            server.enqueue(MockResponse().setResponseCode(200).setBody(fixture("fixtures/vrfypin_success.json")))
+            // 4. drlck → 200
+            server.enqueue(MockResponse().setResponseCode(200).setBody(fixture("fixtures/drlck_success.json")))
 
-        val result = client.lock(vehicleId = "VID-EV9-001", pin = "1234")
+            val result = client.lock(vehicleId = "VID-EV9-001", pin = "1234")
 
-        assertTrue(result.isSuccess)
-        assertEquals("TEST_ACCESS_TOKEN", storage.readAccessToken())
-        assertEquals(4, server.requestCount)
-    }
+            assertTrue(result.isSuccess)
+            assertEquals("TEST_ACCESS_TOKEN", storage.readAccessToken())
+            assertEquals(4, server.requestCount)
+        }
 }

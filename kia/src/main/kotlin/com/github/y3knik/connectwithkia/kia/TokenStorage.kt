@@ -6,6 +6,11 @@ package com.github.y3knik.connectwithkia.kia
  */
 interface TokenStorage {
     fun readAccessToken(): String?
-    fun writeAccessToken(token: String, expiresAtEpochMs: Long)
+
+    fun writeAccessToken(
+        token: String,
+        expiresAtEpochMs: Long,
+    )
+
     fun clear()
 }

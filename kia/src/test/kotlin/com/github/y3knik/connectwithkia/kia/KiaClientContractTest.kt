@@ -25,16 +25,23 @@ class KiaClientContractTest {
 
     @Test
     fun `TokenStorage is referenced and instantiable as a stub`() {
-        val storage = object : TokenStorage {
-            private var token: String? = null
-            override fun readAccessToken(): String? = token
-            override fun writeAccessToken(token: String, expiresAtEpochMs: Long) {
-                this.token = token
+        val storage =
+            object : TokenStorage {
+                private var token: String? = null
+
+                override fun readAccessToken(): String? = token
+
+                override fun writeAccessToken(
+                    token: String,
+                    expiresAtEpochMs: Long,
+                ) {
+                    this.token = token
+                }
+
+                override fun clear() {
+                    token = null
+                }
             }
-            override fun clear() {
-                token = null
-            }
-        }
         storage.writeAccessToken("tk", 1)
         assertNotNull(storage.readAccessToken())
     }

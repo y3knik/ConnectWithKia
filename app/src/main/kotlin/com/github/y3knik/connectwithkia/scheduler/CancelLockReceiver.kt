@@ -6,7 +6,10 @@ import android.content.Intent
 import com.github.y3knik.connectwithkia.di.AppContainer
 
 class CancelLockReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) {
+    override fun onReceive(
+        context: Context,
+        intent: Intent,
+    ) {
         AppContainer.get(context).scheduler.onEvent(LockEvent.UserCancelled)
     }
 }

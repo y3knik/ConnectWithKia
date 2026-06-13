@@ -30,9 +30,10 @@ internal class RedactingInterceptor : Interceptor {
         if (body != null) {
             val buffer = Buffer().also { body.writeTo(it) }
             val text = buffer.readUtf8()
-            val sanitized = secretJsonFields.fold(text) { acc, field ->
-                acc.replace(Regex("\"$field\"\\s*:\\s*\"[^\"]*\""), "\"$field\":\"REDACTED\"")
-            }
+            val sanitized =
+                secretJsonFields.fold(text) { acc, field ->
+                    acc.replace(Regex("\"$field\"\\s*:\\s*\"[^\"]*\""), "\"$field\":\"REDACTED\"")
+                }
             builder.method(request.method, sanitized.toRequestBody(body.contentType() ?: "application/json".toMediaTypeOrNull()))
         }
         return builder.build()

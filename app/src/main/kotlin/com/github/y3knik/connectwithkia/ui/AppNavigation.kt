@@ -23,7 +23,9 @@ import com.github.y3knik.connectwithkia.ui.status.StatusScreen
 
 sealed class Route(val path: String, val label: String) {
     data object Status : Route("status", "Status")
+
     data object Credentials : Route("credentials", "Credentials")
+
     data object Settings : Route("settings", "Settings")
 }
 

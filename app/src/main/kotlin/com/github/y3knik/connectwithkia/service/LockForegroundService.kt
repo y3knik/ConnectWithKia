@@ -15,7 +15,6 @@ import kotlinx.coroutines.launch
 import java.util.concurrent.TimeUnit
 
 class LockForegroundService : Service() {
-
     private val scope = CoroutineScope(Dispatchers.Default)
     private var tickerJob: Job? = null
 
@@ -47,21 +46,25 @@ class LockForegroundService : Service() {
         }
     }
 
-    private fun startTicker(notifications: NotificationHelper, targetEpochMs: Long) {
+    private fun startTicker(
+        notifications: NotificationHelper,
+        targetEpochMs: Long,
+    ) {
         tickerJob?.cancel()
-        tickerJob = scope.launch {
-            while (true) {
-                val remaining = targetEpochMs - System.currentTimeMillis()
-                if (remaining <= 0) break
-                val mins = TimeUnit.MILLISECONDS.toMinutes(remaining)
-                val secs = TimeUnit.MILLISECONDS.toSeconds(remaining) - mins * 60
-                val text = "%d:%02d".format(mins, secs)
-                val n = notifications.countdown(text)
-                getSystemService(android.app.NotificationManager::class.java)
-                    .notify(NotificationHelper.NOTIF_COUNTDOWN, n)
-                delay(1000)
+        tickerJob =
+            scope.launch {
+                while (true) {
+                    val remaining = targetEpochMs - System.currentTimeMillis()
+                    if (remaining <= 0) break
+                    val mins = TimeUnit.MILLISECONDS.toMinutes(remaining)
+                    val secs = TimeUnit.MILLISECONDS.toSeconds(remaining) - mins * 60
+                    val text = "%d:%02d".format(mins, secs)
+                    val n = notifications.countdown(text)
+                    getSystemService(android.app.NotificationManager::class.java)
+                        .notify(NotificationHelper.NOTIF_COUNTDOWN, n)
+                    delay(1000)
+                }
             }
-        }
     }
 
     override fun onDestroy() {

@@ -25,18 +25,22 @@ fun StatusScreen() {
     val container = AppContainer.get(LocalContext.current)
     var enabled by remember { mutableStateOf(container.settings.enabled) }
     val state by container.scheduler.state.collectAsState()
-    val vm = remember {
-        StatusViewModel(
-            state = container.scheduler.state,
-            lockNow = { container.scheduler.onEvent(LockEvent.AlarmFired) },
-            toggleEnabled = {
-                container.settings.enabled = !container.settings.enabled
-                if (container.settings.enabled) container.scheduler.onEvent(LockEvent.MasterEnabled)
-                else container.scheduler.onEvent(LockEvent.MasterDisabled)
-            },
-            isEnabled = { container.settings.enabled },
-        )
-    }
+    val vm =
+        remember {
+            StatusViewModel(
+                state = container.scheduler.state,
+                lockNow = { container.scheduler.onEvent(LockEvent.AlarmFired) },
+                toggleEnabled = {
+                    container.settings.enabled = !container.settings.enabled
+                    if (container.settings.enabled) {
+                        container.scheduler.onEvent(LockEvent.MasterEnabled)
+                    } else {
+                        container.scheduler.onEvent(LockEvent.MasterDisabled)
+                    }
+                },
+                isEnabled = { container.settings.enabled },
+            )
+        }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),

@@ -19,10 +19,11 @@ class ConnectWithKiaApp : Application() {
         observer.observe(ProcessLifecycleOwner.get()) { state ->
             if (state == lastState) return@observe
             lastState = state
-            val event = when (state) {
-                CarConnectionState.NOT_CONNECTED -> LockEvent.AaDisconnected
-                CarConnectionState.PROJECTION, CarConnectionState.NATIVE -> LockEvent.AaConnected
-            }
+            val event =
+                when (state) {
+                    CarConnectionState.NOT_CONNECTED -> LockEvent.AaDisconnected
+                    CarConnectionState.PROJECTION, CarConnectionState.NATIVE -> LockEvent.AaConnected
+                }
             container.scheduler.onEvent(event)
         }
     }

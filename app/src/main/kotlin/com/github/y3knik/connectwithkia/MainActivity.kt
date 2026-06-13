@@ -16,10 +16,10 @@ import com.github.y3knik.connectwithkia.ui.AppNavigation
 import com.github.y3knik.connectwithkia.ui.theme.ConnectWithKiaTheme
 
 class MainActivity : ComponentActivity() {
-
-    private val notifPermission = registerForActivityResult(
-        ActivityResultContracts.RequestPermission(),
-    ) { /* result ignored; UI just rechecks on next resume */ }
+    private val notifPermission =
+        registerForActivityResult(
+            ActivityResultContracts.RequestPermission(),
+        ) { /* result ignored; UI just rechecks on next resume */ }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

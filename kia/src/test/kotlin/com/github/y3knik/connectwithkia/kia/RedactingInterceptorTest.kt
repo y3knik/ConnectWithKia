@@ -11,35 +11,44 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
-import kotlin.test.assertTrue
 import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class RedactingInterceptorTest {
     private lateinit var server: MockWebServer
 
-    @Before fun setUp() { server = MockWebServer().also { it.start() } }
-    @After fun tearDown() { server.shutdown() }
+    @Before fun setUp() {
+        server = MockWebServer().also { it.start() }
+    }
+
+    @After fun tearDown() {
+        server.shutdown()
+    }
 
     @Test
     fun `password and tokens redacted from log output`() {
         val log = StringBuilder()
-        val logger = HttpLoggingInterceptor { log.appendLine(it) }
-            .setLevel(HttpLoggingInterceptor.Level.BODY)
-        val client = OkHttpClient.Builder()
-            .addInterceptor(RedactingInterceptor())
-            .addInterceptor(logger)
-            .build()
+        val logger =
+            HttpLoggingInterceptor { log.appendLine(it) }
+                .setLevel(HttpLoggingInterceptor.Level.BODY)
+        val client =
+            OkHttpClient.Builder()
+                .addInterceptor(RedactingInterceptor())
+                .addInterceptor(logger)
+                .build()
 
         server.enqueue(MockResponse().setResponseCode(200).setBody("ok"))
 
-        val body = """{"email":"a@b.com","password":"hunter2"}"""
-            .toRequestBody("application/json".toMediaType())
-        val request = Request.Builder()
-            .url(server.url("/lgn"))
-            .header("Accesstoken", "SECRET_TOKEN")
-            .header("pAuth", "PAUTH_TOKEN")
-            .post(body)
-            .build()
+        val body =
+            """{"email":"a@b.com","password":"hunter2"}"""
+                .toRequestBody("application/json".toMediaType())
+        val request =
+            Request.Builder()
+                .url(server.url("/lgn"))
+                .header("Accesstoken", "SECRET_TOKEN")
+                .header("pAuth", "PAUTH_TOKEN")
+                .post(body)
+                .build()
 
         client.newCall(request).execute().close()
 

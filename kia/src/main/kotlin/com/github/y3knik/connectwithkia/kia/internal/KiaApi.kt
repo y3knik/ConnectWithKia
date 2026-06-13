@@ -6,10 +6,14 @@ import retrofit2.http.POST
 
 internal interface KiaApi {
     @POST("tods/api/lgn")
-    suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
+    suspend fun login(
+        @Body request: LoginRequest,
+    ): Response<LoginResponse>
 
     @POST("tods/api/vhcllst")
-    suspend fun vehicles(@retrofit2.http.Header("Accesstoken") accessToken: String): Response<VehiclesResponse>
+    suspend fun vehicles(
+        @retrofit2.http.Header("Accesstoken") accessToken: String,
+    ): Response<VehiclesResponse>
 
     @POST("tods/api/vrfypin")
     suspend fun verifyPin(

@@ -17,14 +17,14 @@ class SettingsViewModel(
     private val settings: AppSettings,
     private val credentials: CredentialsRepository,
 ) : ViewModel() {
-
-    private val _state = MutableStateFlow(
-        SettingsUiState(
-            highProminence = settings.highProminenceCountdown,
-            successNotification = settings.successNotification,
-            lockDelayMinutes = settings.lockDelayMinutes,
-        ),
-    )
+    private val _state =
+        MutableStateFlow(
+            SettingsUiState(
+                highProminence = settings.highProminenceCountdown,
+                successNotification = settings.successNotification,
+                lockDelayMinutes = settings.lockDelayMinutes,
+            ),
+        )
     val state: StateFlow<SettingsUiState> = _state.asStateFlow()
 
     fun setHighProminence(value: Boolean) {

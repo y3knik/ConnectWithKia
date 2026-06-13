@@ -22,15 +22,20 @@ class LockScheduler(
 ) {
     interface PersistedTarget {
         fun read(): Long?
+
         fun write(value: Long?)
     }
+
     private object NoopPersistedTarget : PersistedTarget {
         override fun read(): Long? = null
+
         override fun write(value: Long?) {}
     }
-    private val _state = MutableStateFlow<LockState>(
-        if (credentials() != null) LockState.Idle else LockState.Disabled(configured = false),
-    )
+
+    private val _state =
+        MutableStateFlow<LockState>(
+            if (credentials() != null) LockState.Idle else LockState.Disabled(configured = false),
+        )
     val state: StateFlow<LockState> = _state.asStateFlow()
     private val machine = LockStateMachine(initial = _state.value)
     private var lockJob: Job? = null
@@ -47,7 +52,11 @@ class LockScheduler(
         lockJob?.join()
     }
 
-    private fun applySideEffects(previous: LockState, next: LockState, event: LockEvent) {
+    private fun applySideEffects(
+        previous: LockState,
+        next: LockState,
+        event: LockEvent,
+    ) {
         if (next is LockState.PendingLock && previous !is LockState.PendingLock) {
             val targetMs = clockMs() + delayMinutes().coerceAtLeast(1) * 60_000L
             alarmDriver.arm(targetMs)
@@ -86,18 +95,20 @@ class LockScheduler(
     }
 
     private fun performLock() {
-        val creds = credentials() ?: run {
-            onEvent(LockEvent.LockFailed("no credentials"))
-            return
-        }
+        val creds =
+            credentials() ?: run {
+                onEvent(LockEvent.LockFailed("no credentials"))
+                return
+            }
         val (vehicleId, pin, _) = creds
-        lockJob = scope.launch {
-            val result = kia.lock(vehicleId, pin)
-            result.fold(
-                onSuccess = { onEvent(LockEvent.LockSucceeded) },
-                onFailure = { onEvent(LockEvent.LockFailed(it.message ?: "unknown")) },
-            )
-        }
+        lockJob =
+            scope.launch {
+                val result = kia.lock(vehicleId, pin)
+                result.fold(
+                    onSuccess = { onEvent(LockEvent.LockSucceeded) },
+                    onFailure = { onEvent(LockEvent.LockFailed(it.message ?: "unknown")) },
+                )
+            }
     }
 
     private companion object {

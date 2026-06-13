@@ -17,14 +17,14 @@ class DefaultKiaClient internal constructor(
     enableLogging: Boolean = false,
     okHttpClient: OkHttpClient = buildDefaultOkHttpClient(enableLogging),
 ) : KiaClient {
-
     private val json = Json { ignoreUnknownKeys = true }
-    private val api: KiaApi = Retrofit.Builder()
-        .baseUrl(if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/")
-        .client(okHttpClient)
-        .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
-        .build()
-        .create(KiaApi::class.java)
+    private val api: KiaApi =
+        Retrofit.Builder()
+            .baseUrl(if (baseUrl.endsWith("/")) baseUrl else "$baseUrl/")
+            .client(okHttpClient)
+            .addConverterFactory(json.asConverterFactory("application/json".toMediaType()))
+            .build()
+            .create(KiaApi::class.java)
 
     constructor(tokenStorage: TokenStorage, credentialProvider: CredentialProvider) : this(
         baseUrl = "https://kiaconnect.ca/",
@@ -39,50 +39,60 @@ class DefaultKiaClient internal constructor(
         enableLogging = enableLogging,
     )
 
-    override suspend fun login(email: String, password: String): Result<Unit> = runCatching {
-        val response = api.login(LoginRequest(email, password))
-        val body = response.body()
-        require(response.isSuccessful && body != null) { "login failed: HTTP ${response.code()}" }
-        tokenStorage.writeAccessToken(
-            token = body.accessToken,
-            expiresAtEpochMs = clockMs() + body.expiresIn * 1000,
-        )
-    }
+    override suspend fun login(
+        email: String,
+        password: String,
+    ): Result<Unit> =
+        runCatching {
+            val response = api.login(LoginRequest(email, password))
+            val body = response.body()
+            require(response.isSuccessful && body != null) { "login failed: HTTP ${response.code()}" }
+            tokenStorage.writeAccessToken(
+                token = body.accessToken,
+                expiresAtEpochMs = clockMs() + body.expiresIn * 1000,
+            )
+        }
 
-    override suspend fun vehicles(): Result<List<Vehicle>> = runCatching {
-        val token = requireNotNull(tokenStorage.readAccessToken()) { "not logged in" }
-        val response = api.vehicles(token)
-        val body = response.body()
-        require(response.isSuccessful && body != null) { "vehicles failed: HTTP ${response.code()}" }
-        body.vehicles.map { Vehicle(id = it.vehicleId, nickname = it.nickName, vin = it.vin) }
-    }
-
-    override suspend fun lock(vehicleId: String, pin: String): Result<Unit> = runCatching {
-        suspend fun attempt(): retrofit2.Response<com.github.y3knik.connectwithkia.kia.internal.PinResponse> {
+    override suspend fun vehicles(): Result<List<Vehicle>> =
+        runCatching {
             val token = requireNotNull(tokenStorage.readAccessToken()) { "not logged in" }
-            return api.verifyPin(token, com.github.y3knik.connectwithkia.kia.internal.PinRequest(pin))
+            val response = api.vehicles(token)
+            val body = response.body()
+            require(response.isSuccessful && body != null) { "vehicles failed: HTTP ${response.code()}" }
+            body.vehicles.map { Vehicle(id = it.vehicleId, nickname = it.nickName, vin = it.vin) }
         }
 
-        var pinResponse = attempt()
-        if (pinResponse.code() == 401) {
-            val creds = credentialProvider.current() ?: error("401 from preauth and no credentials available to refresh")
-            login(creds.email, creds.password).getOrThrow()
-            pinResponse = attempt()
-        }
-        val pAuth = pinResponse.body()?.pAuth
-        require(pinResponse.isSuccessful && pAuth != null) { "pin verify failed: HTTP ${pinResponse.code()}" }
+    override suspend fun lock(
+        vehicleId: String,
+        pin: String,
+    ): Result<Unit> =
+        runCatching {
+            suspend fun attempt(): retrofit2.Response<com.github.y3knik.connectwithkia.kia.internal.PinResponse> {
+                val token = requireNotNull(tokenStorage.readAccessToken()) { "not logged in" }
+                return api.verifyPin(token, com.github.y3knik.connectwithkia.kia.internal.PinRequest(pin))
+            }
 
-        val token = requireNotNull(tokenStorage.readAccessToken()) { "not logged in" }
-        val lockResponse = api.lock(token, pAuth, vehicleId)
-        require(lockResponse.isSuccessful) { "lock failed: HTTP ${lockResponse.code()}" }
-    }
+            var pinResponse = attempt()
+            if (pinResponse.code() == 401) {
+                val creds = credentialProvider.current() ?: error("401 from preauth and no credentials available to refresh")
+                login(creds.email, creds.password).getOrThrow()
+                pinResponse = attempt()
+            }
+            val pAuth = pinResponse.body()?.pAuth
+            require(pinResponse.isSuccessful && pAuth != null) { "pin verify failed: HTTP ${pinResponse.code()}" }
+
+            val token = requireNotNull(tokenStorage.readAccessToken()) { "not logged in" }
+            val lockResponse = api.lock(token, pAuth, vehicleId)
+            require(lockResponse.isSuccessful) { "lock failed: HTTP ${lockResponse.code()}" }
+        }
 
     companion object {
         private fun buildDefaultOkHttpClient(enableLogging: Boolean): OkHttpClient {
-            val builder = OkHttpClient.Builder()
-                .connectTimeout(15, TimeUnit.SECONDS)
-                .readTimeout(30, TimeUnit.SECONDS)
-                .writeTimeout(15, TimeUnit.SECONDS)
+            val builder =
+                OkHttpClient.Builder()
+                    .connectTimeout(15, TimeUnit.SECONDS)
+                    .readTimeout(30, TimeUnit.SECONDS)
+                    .writeTimeout(15, TimeUnit.SECONDS)
             if (enableLogging) {
                 builder.addInterceptor(com.github.y3knik.connectwithkia.kia.internal.RedactingInterceptor())
                 builder.addInterceptor(

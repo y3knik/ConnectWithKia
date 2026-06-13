@@ -17,9 +17,10 @@ class DefaultKiaClientVehiclesTest {
     @Before
     fun setUp() {
         server = MockWebServer().also { it.start() }
-        storage = InMemoryTokenStorage().also {
-            it.writeAccessToken("TEST_ACCESS_TOKEN", expiresAtEpochMs = 9_999_999_999L)
-        }
+        storage =
+            InMemoryTokenStorage().also {
+                it.writeAccessToken("TEST_ACCESS_TOKEN", expiresAtEpochMs = 9_999_999_999L)
+            }
         client = DefaultKiaClient(baseUrl = server.url("/").toString(), tokenStorage = storage)
     }
 
@@ -29,24 +30,25 @@ class DefaultKiaClientVehiclesTest {
     }
 
     @Test
-    fun `vehicles returns parsed list and sends access token`() = runTest {
-        server.enqueue(
-            MockResponse()
-                .setResponseCode(200)
-                .setBody(fixture("fixtures/vehicles_one_ev9.json")),
-        )
+    fun `vehicles returns parsed list and sends access token`() =
+        runTest {
+            server.enqueue(
+                MockResponse()
+                    .setResponseCode(200)
+                    .setBody(fixture("fixtures/vehicles_one_ev9.json")),
+            )
 
-        val result = client.vehicles()
+            val result = client.vehicles()
 
-        assertTrue(result.isSuccess, "vehicles should succeed")
-        val list = result.getOrThrow()
-        assertEquals(1, list.size)
-        assertEquals("VID-EV9-001", list[0].id)
-        assertEquals("EV9", list[0].nickname)
-        assertEquals("KNDPC3DG7P0000001", list[0].vin)
-        val recorded = server.takeRequest()
-        assertEquals("POST", recorded.method)
-        assertTrue(recorded.path?.endsWith("vhcllst") == true)
-        assertEquals("TEST_ACCESS_TOKEN", recorded.getHeader("Accesstoken"))
-    }
+            assertTrue(result.isSuccess, "vehicles should succeed")
+            val list = result.getOrThrow()
+            assertEquals(1, list.size)
+            assertEquals("VID-EV9-001", list[0].id)
+            assertEquals("EV9", list[0].nickname)
+            assertEquals("KNDPC3DG7P0000001", list[0].vin)
+            val recorded = server.takeRequest()
+            assertEquals("POST", recorded.method)
+            assertTrue(recorded.path?.endsWith("vhcllst") == true)
+            assertEquals("TEST_ACCESS_TOKEN", recorded.getHeader("Accesstoken"))
+        }
 }
