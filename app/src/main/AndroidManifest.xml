@@ -46,6 +46,10 @@
             </intent-filter>
         </receiver>
 
+        <receiver
+            android:name=".scheduler.CancelLockReceiver"
+            android:exported="false" />
+
         <!-- Foreground service + receivers wired in later tasks -->
 
     </application>
