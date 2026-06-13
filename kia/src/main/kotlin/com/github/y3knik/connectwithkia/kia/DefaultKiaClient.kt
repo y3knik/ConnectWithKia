@@ -2,6 +2,7 @@ package com.github.y3knik.connectwithkia.kia
 
 import com.github.y3knik.connectwithkia.kia.internal.KiaApi
 import com.github.y3knik.connectwithkia.kia.internal.LoginRequest
+import com.github.y3knik.connectwithkia.kia.internal.PinRequest
 import com.jakewharton.retrofit2.converter.kotlinx.serialization.asConverterFactory
 import kotlinx.serialization.json.Json
 import okhttp3.MediaType.Companion.toMediaType
@@ -47,8 +48,14 @@ class DefaultKiaClient internal constructor(
         body.vehicles.map { Vehicle(id = it.vehicleId, nickname = it.nickName, vin = it.vin) }
     }
 
-    override suspend fun lock(vehicleId: String, pin: String): Result<Unit> =
-        Result.failure(NotImplementedError("lock() implemented in Task 9"))
+    override suspend fun lock(vehicleId: String, pin: String): Result<Unit> = runCatching {
+        val token = requireNotNull(tokenStorage.readAccessToken()) { "not logged in" }
+        val pinResponse = api.verifyPin(token, PinRequest(pin))
+        val pAuth = pinResponse.body()?.pAuth
+        require(pinResponse.isSuccessful && pAuth != null) { "pin verify failed: HTTP ${pinResponse.code()}" }
+        val lockResponse = api.lock(token, pAuth, vehicleId)
+        require(lockResponse.isSuccessful) { "lock failed: HTTP ${lockResponse.code()}" }
+    }
 
     companion object {
         private fun defaultOkHttp(): OkHttpClient =

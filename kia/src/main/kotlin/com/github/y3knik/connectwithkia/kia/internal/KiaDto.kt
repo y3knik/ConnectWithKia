@@ -26,3 +26,12 @@ internal data class VehicleDto(
     @SerialName("nickName") val nickName: String,
     val vin: String,
 )
+
+@Serializable
+internal data class PinRequest(val pin: String)
+
+@Serializable
+internal data class PinResponse(val pAuth: String)
+
+@Serializable
+internal data class LockResponse(val status: String)
