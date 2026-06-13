@@ -32,6 +32,10 @@
             </intent-filter>
         </activity>
 
+        <receiver
+            android:name=".scheduler.LockAlarmReceiver"
+            android:exported="false" />
+
         <!-- Foreground service + receivers wired in later tasks -->
 
     </application>
