@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">ConnectWithKia</string>
+    <string name="channel_countdown_name">Walk-away lock countdown</string>
+    <string name="channel_countdown_desc">Shows a countdown when the lock is pending.</string>
+    <string name="channel_outcomes_name">Walk-away lock results</string>
+    <string name="channel_outcomes_desc">Shows success or failure after a lock attempt.</string>
+    <string name="notif_countdown_title">EV9 locking soon</string>
+    <string name="notif_countdown_text">Locking in %1$s</string>
+    <string name="notif_cancel_action">Cancel</string>
+    <string name="notif_success_title">EV9 locked</string>
+    <string name="notif_failure_title">EV9 lock failed</string>
+</resources>

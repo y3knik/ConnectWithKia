@@ -1,0 +1,29 @@
+package com.github.y3knik.connectwithkia.kia
+
+interface KiaClient {
+    suspend fun login(
+        email: String,
+        password: String,
+    ): Result<Unit>
+
+    suspend fun vehicles(): Result<List<Vehicle>>
+
+    suspend fun lock(
+        vehicleId: String,
+        pin: String,
+    ): Result<Unit>
+}
+
+data class Vehicle(
+    val id: String,
+    val nickname: String,
+    val vin: String,
+)
+
+data class Credentials(val email: String, val password: String) {
+    override fun toString(): String = "Credentials(email=***, password=***)"
+}
+
+fun interface CredentialProvider {
+    fun current(): Credentials?
+}
