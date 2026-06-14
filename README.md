@@ -24,30 +24,16 @@ Requires JDK 17 and the Android SDK.
 
 Output APK: `app/build/outputs/apk/debug/app-debug.apk`.
 
-## Signed releases
+## Releases
 
-The `release` workflow signs the APK using these repository secrets (Settings → Secrets and variables → Actions):
-
-- `SIGNING_KEYSTORE_BASE64` — `base64` of an Android signing keystore
-- `SIGNING_KEY_ALIAS`
-- `SIGNING_KEY_PASSWORD`
-- `SIGNING_STORE_PASSWORD`
-
-Create the keystore once locally:
-
-```bash
-keytool -genkey -v -keystore release.keystore -alias release \
-  -keyalg RSA -keysize 2048 -validity 10000
-# Portable base64 (works on both GNU and BSD): pipe through tr to drop newlines.
-base64 < release.keystore | tr -d '\n' > release.keystore.b64
-```
-
-Copy the contents of `release.keystore.b64` into the `SIGNING_KEYSTORE_BASE64` secret. Tag a release and push only that tag to trigger the build:
+This is a personal sideload, so the `release` workflow publishes a debug-signed APK — no keystore secrets required. Tag a version and push only that tag to trigger the build:
 
 ```bash
 git tag v0.1.0
 git push origin v0.1.0
 ```
+
+The workflow runs `:app:assembleDebug` and attaches `app-debug.apk` to a GitHub Release for the tag. Debug APKs install on any Android device with "Install unknown apps" enabled for your file manager.
 
 ## License
 
