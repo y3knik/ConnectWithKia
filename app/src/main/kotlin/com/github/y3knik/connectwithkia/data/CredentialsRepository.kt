@@ -1,7 +1,7 @@
 package com.github.y3knik.connectwithkia.data
 
 data class StoredCredentials(val email: String, val password: String, val pin: String) {
-    override fun toString(): String = "StoredCredentials(email=$email, password=***, pin=***)"
+    override fun toString(): String = "StoredCredentials(email=***, password=***, pin=***)"
 }
 
 class CredentialsRepository(private val prefs: PreferencesSource) {

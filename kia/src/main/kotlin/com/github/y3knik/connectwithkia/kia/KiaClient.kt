@@ -21,7 +21,7 @@ data class Vehicle(
 )
 
 data class Credentials(val email: String, val password: String) {
-    override fun toString(): String = "Credentials(email=$email, password=***)"
+    override fun toString(): String = "Credentials(email=***, password=***)"
 }
 
 fun interface CredentialProvider {

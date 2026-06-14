@@ -74,7 +74,9 @@ class DefaultKiaClient internal constructor(
 
             var pinResponse = attempt()
             if (pinResponse.code() == 401) {
-                val creds = credentialProvider.current() ?: error("401 from preauth and no credentials available to refresh")
+                val creds =
+                    credentialProvider.current()
+                        ?: error("401 from preauth and no credentials available to refresh")
                 login(creds.email, creds.password).getOrThrow()
                 pinResponse = attempt()
             }
@@ -94,9 +96,9 @@ class DefaultKiaClient internal constructor(
                     .readTimeout(30, TimeUnit.SECONDS)
                     .writeTimeout(15, TimeUnit.SECONDS)
             if (enableLogging) {
-                builder.addInterceptor(com.github.y3knik.connectwithkia.kia.internal.RedactingInterceptor())
+                val logger = com.github.y3knik.connectwithkia.kia.internal.RedactingLogger { println(it) }
                 builder.addInterceptor(
-                    okhttp3.logging.HttpLoggingInterceptor()
+                    okhttp3.logging.HttpLoggingInterceptor(logger)
                         .setLevel(okhttp3.logging.HttpLoggingInterceptor.Level.BODY),
                 )
             }

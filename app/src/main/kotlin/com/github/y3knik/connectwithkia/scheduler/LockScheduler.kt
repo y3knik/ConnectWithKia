@@ -41,10 +41,12 @@ class LockScheduler(
     private var lockJob: Job? = null
 
     fun onEvent(event: LockEvent) {
-        val previous = _state.value
-        val next = machine.transition(event)
-        _state.value = next
-        applySideEffects(previous, next, event)
+        synchronized(this) {
+            val previous = _state.value
+            val next = machine.transition(event)
+            _state.value = next
+            applySideEffects(previous, next, event)
+        }
     }
 
     /** Test hook: waits for the active lock job (if any) to finish. */
@@ -66,7 +68,7 @@ class LockScheduler(
             alarmDriver.cancel()
             persistedTarget.write(null)
         }
-        if (next is LockState.Locking) {
+        if (next is LockState.Locking && previous !is LockState.Locking) {
             persistedTarget.write(null)
             performLock()
         }
@@ -76,20 +78,28 @@ class LockScheduler(
     fun rearmIfPending(): Boolean {
         val target = persistedTarget.read() ?: return false
         val now = clockMs()
-        return when {
-            target > now -> {
-                alarmDriver.arm(target)
-                _state.value = LockState.PendingLock
-                true
-            }
-            now - target <= STALE_LIMIT_MS -> {
-                _state.value = LockState.PendingLock
-                onEvent(LockEvent.AlarmFired)
-                true
-            }
-            else -> {
-                persistedTarget.write(null)
-                false
+        return synchronized(this) {
+            when {
+                target > now -> {
+                    alarmDriver.arm(target)
+                    machine.reset(LockState.PendingLock)
+                    _state.value = LockState.PendingLock
+                    true
+                }
+                now - target <= STALE_LIMIT_MS -> {
+                    machine.reset(LockState.PendingLock)
+                    _state.value = LockState.PendingLock
+                    // Re-enter the lock flow synchronously; onEvent re-takes the same monitor
+                    // (synchronized is reentrant), so this is safe.
+                    val next = machine.transition(LockEvent.AlarmFired)
+                    _state.value = next
+                    applySideEffects(LockState.PendingLock, next, LockEvent.AlarmFired)
+                    true
+                }
+                else -> {
+                    persistedTarget.write(null)
+                    false
+                }
             }
         }
     }

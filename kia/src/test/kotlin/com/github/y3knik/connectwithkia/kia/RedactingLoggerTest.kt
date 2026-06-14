@@ -1,6 +1,6 @@
 package com.github.y3knik.connectwithkia.kia
 
-import com.github.y3knik.connectwithkia.kia.internal.RedactingInterceptor
+import com.github.y3knik.connectwithkia.kia.internal.RedactingLogger
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -11,10 +11,11 @@ import okhttp3.mockwebserver.MockWebServer
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
-class RedactingInterceptorTest {
+class RedactingLoggerTest {
     private lateinit var server: MockWebServer
 
     @Before fun setUp() {
@@ -26,14 +27,13 @@ class RedactingInterceptorTest {
     }
 
     @Test
-    fun `password and tokens redacted from log output`() {
+    fun `password and tokens redacted from log output, original sent on the wire`() {
         val log = StringBuilder()
         val logger =
-            HttpLoggingInterceptor { log.appendLine(it) }
+            HttpLoggingInterceptor(RedactingLogger { log.appendLine(it) })
                 .setLevel(HttpLoggingInterceptor.Level.BODY)
         val client =
             OkHttpClient.Builder()
-                .addInterceptor(RedactingInterceptor())
                 .addInterceptor(logger)
                 .build()
 
@@ -52,10 +52,15 @@ class RedactingInterceptorTest {
 
         client.newCall(request).execute().close()
 
+        val sent = server.takeRequest()
+        assertTrue("hunter2" in sent.body.readUtf8(), "real password must reach server")
+        assertEquals("SECRET_TOKEN", sent.getHeader("Accesstoken"))
+        assertEquals("PAUTH_TOKEN", sent.getHeader("pAuth"))
+
         val text = log.toString()
-        assertFalse("hunter2" in text, "password leaked: $text")
-        assertFalse("SECRET_TOKEN" in text, "access token leaked")
-        assertFalse("PAUTH_TOKEN" in text, "pAuth leaked")
-        assertTrue("REDACTED" in text)
+        assertFalse("hunter2" in text, "password leaked in log: $text")
+        assertFalse("SECRET_TOKEN" in text, "access token leaked in log")
+        assertFalse("PAUTH_TOKEN" in text, "pAuth leaked in log")
+        assertTrue("REDACTED" in text, "no REDACTED marker in log: $text")
     }
 }

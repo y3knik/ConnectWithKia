@@ -41,6 +41,11 @@ class LockStateMachine(initial: LockState) {
         return state
     }
 
+    /** Force the internal state without running a transition. Used to recover from persistence. */
+    fun reset(newState: LockState) {
+        state = newState
+    }
+
     private fun next(
         state: LockState,
         event: LockEvent,

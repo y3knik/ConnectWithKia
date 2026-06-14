@@ -38,10 +38,16 @@ Create the keystore once locally:
 ```bash
 keytool -genkey -v -keystore release.keystore -alias release \
   -keyalg RSA -keysize 2048 -validity 10000
-base64 -w 0 release.keystore > release.keystore.b64
+# Portable base64 (works on both GNU and BSD): pipe through tr to drop newlines.
+base64 < release.keystore | tr -d '\n' > release.keystore.b64
 ```
 
-Copy the contents of `release.keystore.b64` into the `SIGNING_KEYSTORE_BASE64` secret. Tag a release with `git tag v0.1.0 && git push --tags` to trigger the build.
+Copy the contents of `release.keystore.b64` into the `SIGNING_KEYSTORE_BASE64` secret. Tag a release and push only that tag to trigger the build:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
 
 ## License
 

@@ -12,18 +12,32 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
 import com.github.y3knik.connectwithkia.di.AppContainer
 
 @Composable
 fun SettingsScreen() {
     val container = AppContainer.get(LocalContext.current)
-    val vm = remember { SettingsViewModel(container.settings, container.credentials) }
+    val vm: SettingsViewModel =
+        viewModel(
+            factory =
+                viewModelFactory {
+                    initializer { SettingsViewModel(container.settings, container.credentials) }
+                },
+        )
     val s by vm.state.collectAsState()
+    var sliderValue by remember(s.lockDelayMinutes) {
+        mutableFloatStateOf(s.lockDelayMinutes.toFloat())
+    }
 
     Column(
         modifier = Modifier.fillMaxSize().padding(16.dp),
@@ -37,10 +51,11 @@ fun SettingsScreen() {
             Text("Success notification")
             Switch(checked = s.successNotification, onCheckedChange = vm::setSuccessNotification)
         }
-        Text("Lock delay: ${s.lockDelayMinutes} min")
+        Text("Lock delay: ${sliderValue.toInt()} min")
         Slider(
-            value = s.lockDelayMinutes.toFloat(),
-            onValueChange = { vm.setDelay(it.toInt()) },
+            value = sliderValue,
+            onValueChange = { sliderValue = it },
+            onValueChangeFinished = { vm.setDelay(sliderValue.toInt()) },
             valueRange = 1f..15f,
             steps = 13,
         )

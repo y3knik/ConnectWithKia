@@ -54,9 +54,14 @@ class CredentialsViewModel(
             _state.value = CredentialsUiState.Error("Fill all three fields. PIN must be 4 digits.")
             return
         }
+        // Snapshot the values being verified so that further edits during the network call
+        // don't corrupt what we persist.
+        val verifiedEmail = email
+        val verifiedPassword = password
+        val verifiedPin = pin
         _state.value = CredentialsUiState.Verifying
         viewModelScope.launch {
-            kia.login(email, password)
+            kia.login(verifiedEmail, verifiedPassword)
                 .onFailure {
                     _state.value = CredentialsUiState.Error(it.message ?: "Login failed")
                     return@launch
@@ -66,7 +71,7 @@ class CredentialsViewModel(
                 _state.value = CredentialsUiState.Error("No vehicles found on the account")
                 return@launch
             }
-            repository.write(email, password, pin)
+            repository.write(verifiedEmail, verifiedPassword, verifiedPin)
             repository.vehicleId = vehicles.first().id
             _state.value = CredentialsUiState.SavedSuccessfully
         }

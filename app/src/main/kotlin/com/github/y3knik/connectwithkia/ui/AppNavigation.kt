@@ -13,6 +13,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.navigation.NavController
+import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -39,19 +41,19 @@ fun AppNavigation() {
             NavigationBar {
                 NavigationBarItem(
                     selected = route == Route.Status.path,
-                    onClick = { nav.navigate(Route.Status.path) },
+                    onClick = { nav.navigateTab(Route.Status.path) },
                     icon = { Icon(Icons.Default.Home, contentDescription = null) },
                     label = { Text(Route.Status.label) },
                 )
                 NavigationBarItem(
                     selected = route == Route.Credentials.path,
-                    onClick = { nav.navigate(Route.Credentials.path) },
+                    onClick = { nav.navigateTab(Route.Credentials.path) },
                     icon = { Icon(Icons.Default.Lock, contentDescription = null) },
                     label = { Text(Route.Credentials.label) },
                 )
                 NavigationBarItem(
                     selected = route == Route.Settings.path,
-                    onClick = { nav.navigate(Route.Settings.path) },
+                    onClick = { nav.navigateTab(Route.Settings.path) },
                     icon = { Icon(Icons.Default.Settings, contentDescription = null) },
                     label = { Text(Route.Settings.label) },
                 )
@@ -67,5 +69,13 @@ fun AppNavigation() {
             composable(Route.Credentials.path) { CredentialsScreen() }
             composable(Route.Settings.path) { SettingsScreen() }
         }
+    }
+}
+
+private fun NavController.navigateTab(route: String) {
+    navigate(route) {
+        popUpTo(graph.findStartDestination().id) { saveState = true }
+        launchSingleTop = true
+        restoreState = true
     }
 }
